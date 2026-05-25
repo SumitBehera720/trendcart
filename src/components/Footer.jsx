@@ -183,6 +183,9 @@ export default function Footer({ onCategoryClick, onStoryClick, onTrackClick }) 
         <div className="footer-bottom" style={{ borderTop: 'var(--glass-border)', marginTop: '60px', paddingTop: '30px' }}>
           <div>
             © {new Date().getFullYear()} TRENDCART. ALL RIGHTS RESERVED.
+            <div style={{ marginTop: '6px', fontSize: '0.75rem', color: 'var(--text-grey)' }}>
+              Designed & Developed by <a href="https://qubnixtechnology.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-raw)', textDecoration: 'underline', fontWeight: 600 }}>Qubnix Technology</a>
+            </div>
           </div>
           <div className="footer-bottom-links">
             <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>SECURE PAYMENTS BY RAZORPAY CHECKOUT</span>
