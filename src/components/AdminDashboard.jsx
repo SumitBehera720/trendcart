@@ -123,9 +123,9 @@ export default function AdminDashboard({ currentUser, onClose }) {
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--bg-dark)', zIndex: 9999, overflowY: 'auto' }} data-lenis-prevent="true">
       
       {/* Header */}
-      <div style={{ padding: '24px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, backgroundColor: 'var(--bg-dark)', zIndex: 10 }}>
+      <div className="admin-dashboard-header">
         <div>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', letterSpacing: '-0.5px' }}>TRENDCART ADMIN CENTER</h1>
+          <h1 className="admin-dashboard-title" style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.5px' }}>TRENDCART ADMIN CENTER</h1>
           <p className="mono" style={{ fontSize: '0.75rem', color: 'var(--accent-raw)' }}>ADMINISTRATOR ACCESS // {currentUser.email}</p>
         </div>
         <button onClick={onClose} className="tracking-close-btn" title="Exit Admin">
@@ -133,11 +133,11 @@ export default function AdminDashboard({ currentUser, onClose }) {
         </button>
       </div>
 
-      <div style={{ padding: '40px', display: 'grid', gridTemplateColumns: '1fr 350px', gap: '40px', alignItems: 'start' }}>
+      <div className="admin-dashboard-grid">
         
         {/* Left: Product List */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem' }}>CATALOG INVENTORY</h2>
             <button onClick={resetForm} className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.8rem' }}>
               <Plus size={16} /> New Product
@@ -148,45 +148,47 @@ export default function AdminDashboard({ currentUser, onClose }) {
             {loading ? (
               <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-grey)' }}>Loading inventory...</div>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left' }}>
-                    <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: 400 }}>ID / Item</th>
-                    <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: 400 }}>Category</th>
-                    <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: 400 }}>Price</th>
-                    <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: 400, textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map(p => (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                      <td style={{ padding: '16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ width: '40px', height: '40px', backgroundColor: 'var(--bg-input)', borderRadius: '2px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={16} color="var(--text-muted)" />}
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: 600 }}>{p.name}</div>
-                            <div className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-grey)', marginTop: '2px' }}>{p.id}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px', textTransform: 'capitalize' }}>{p.category}</td>
-                      <td style={{ padding: '16px', fontFamily: 'var(--font-mono)' }}>₹{p.price.toLocaleString('en-IN')}</td>
-                      <td style={{ padding: '16px', textAlign: 'right' }}>
-                        <button onClick={() => handleEdit(p)} style={{ background: 'none', border: 'none', color: 'var(--text-grey)', cursor: 'pointer', marginRight: '16px' }} title="Edit"><Edit2 size={16} /></button>
-                        <button onClick={() => handleDelete(p.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }} title="Delete"><Trash2 size={16} /></button>
-                      </td>
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table style={{ width: '100%', minWidth: '650px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left' }}>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: 400 }}>ID / Item</th>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: 400 }}>Category</th>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: 400 }}>Price</th>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: 400, textAlign: 'right' }}>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {products.map(p => (
+                      <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '40px', height: '40px', backgroundColor: 'var(--bg-input)', borderRadius: '2px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={16} color="var(--text-muted)" />}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 600 }}>{p.name}</div>
+                              <div className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-grey)', marginTop: '2px' }}>{p.id}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px', textTransform: 'capitalize' }}>{p.category}</td>
+                        <td style={{ padding: '16px', fontFamily: 'var(--font-mono)' }}>₹{p.price.toLocaleString('en-IN')}</td>
+                        <td style={{ padding: '16px', textAlign: 'right' }}>
+                          <button onClick={() => handleEdit(p)} style={{ background: 'none', border: 'none', color: 'var(--text-grey)', cursor: 'pointer', marginRight: '16px' }} title="Edit"><Edit2 size={16} /></button>
+                          <button onClick={() => handleDelete(p.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }} title="Delete"><Trash2 size={16} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
 
         {/* Right: Add/Edit Form */}
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '24px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '4px', position: 'sticky', top: '100px' }}>
+        <div className="admin-dashboard-form">
           <h3 style={{ fontSize: '1rem', marginBottom: '20px', fontFamily: 'var(--font-mono)', color: 'var(--accent-raw)' }}>
             {isEditing ? `EDITING: ${editingId}` : 'CREATE NEW ITEM'}
           </h3>

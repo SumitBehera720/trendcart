@@ -16,6 +16,8 @@ export default function Preloader({ onComplete }) {
   const containerRef = useRef(null);
   const progressBarRef = useRef(null);
   const wordRef = useRef(null);
+  const brandSubRef = useRef(null);
+  const taglineRef = useRef(null);
 
   useEffect(() => {
     // Word cycler
@@ -40,9 +42,15 @@ export default function Preloader({ onComplete }) {
             onComplete: onComplete
           });
           
-          tl.to(wordRef.current, { y: -20, opacity: 0, duration: 0.4, ease: "power2.in" })
+          tl.to([wordRef.current, brandSubRef.current, taglineRef.current], { 
+            y: -15, 
+            opacity: 0, 
+            duration: 0.4, 
+            stagger: 0.08, 
+            ease: "power2.in" 
+          })
             .to(progressBarRef.current, { height: 0, opacity: 0, duration: 0.4, ease: "power2.inOut" }, "-=0.2")
-            .to(containerRef.current, { y: "-100%", duration: 0.8, ease: "power4.inOut" }, "+=0.2")
+            .to(containerRef.current, { y: "-100%", duration: 0.8, ease: "power4.inOut" }, "+=0.1")
             .set(containerRef.current, { display: "none" });
 
           return 100;
@@ -60,7 +68,7 @@ export default function Preloader({ onComplete }) {
   return (
     <div className="preloader-overlay" ref={containerRef}>
       <div className="preloader-brand">
-        <span className="mono" style={{ fontSize: '0.9rem', color: 'var(--text-grey)', letterSpacing: '4px', display: 'block', textAlign: 'center', marginBottom: '10px' }}>
+        <span ref={brandSubRef} className="mono" style={{ fontSize: '0.9rem', color: 'var(--text-grey)', letterSpacing: '4px', display: 'block', textAlign: 'center', marginBottom: '10px' }}>
           TRENDCART // ESTD 2026
         </span>
         <div style={{ minHeight: '6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -72,7 +80,7 @@ export default function Preloader({ onComplete }) {
         <div className="preloader-progress-bar" ref={progressBarRef} style={{ width: `${percent}%`, background: 'var(--accent-gradient)' }}></div>
       </div>
       
-      <div className="preloader-tagline mono">
+      <div className="preloader-tagline mono" ref={taglineRef}>
         {percent}% INITIALIZING YOUR SHOPPING EXPERIENCE
       </div>
     </div>

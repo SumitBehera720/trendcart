@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, Sparkles } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,15 +13,41 @@ const PROMO_TEXTS = [
   "✨ SHOP SMART, LIVE BETTER WITH TRENDCART"
 ];
 
-export default function Hero({ onExploreClick }) {
+// Premium fashion & lifestyle imagery from Unsplash
+const HERO_SLIDES = [
+  {
+    image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=90&w=1920&auto=format&fit=crop",
+    label: "NEW SEASON",
+    accent: "rgba(139,92,246,0.6)",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=90&w=1920&auto=format&fit=crop",
+    label: "LUXURY EDIT",
+    accent: "rgba(6,182,212,0.5)",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=90&w=1920&auto=format&fit=crop",
+    label: "CURATED PICKS",
+    accent: "rgba(251,113,133,0.45)",
+  },
+  {
+    image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=90&w=1920&auto=format&fit=crop",
+    label: "STYLE ICONS",
+    accent: "rgba(250,204,21,0.3)",
+  },
+];
+
+export default function Hero({ onExploreClick, startAnimation }) {
   const heroRef = useRef(null);
-  const bgRef = useRef(null);
   const [promoIndex, setPromoIndex] = useState(0);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [prevSlideIndex, setPrevSlideIndex] = useState(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    // GSAP Parallax
-    gsap.to(bgRef.current, {
-      yPercent: 30,
+    // GSAP Parallax on content
+    gsap.to('.hero-content', {
+      yPercent: 15,
       ease: "none",
       scrollTrigger: {
         trigger: heroRef.current,
@@ -32,120 +58,193 @@ export default function Hero({ onExploreClick }) {
     });
 
     // Promo rotating ticker
-    const interval = setInterval(() => {
+    const promoInterval = setInterval(() => {
       setPromoIndex((prev) => (prev + 1) % PROMO_TEXTS.length);
     }, 4000);
 
-    return () => clearInterval(interval);
-  }, []);
+    // Slide transitions
+    const slideInterval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setPrevSlideIndex(slideIndex);
+        setSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+        setIsTransitioning(false);
+      }, 800);
+    }, 5000);
+
+    return () => {
+      clearInterval(promoInterval);
+      clearInterval(slideInterval);
+    };
+  }, [slideIndex]);
+
+  const current = HERO_SLIDES[slideIndex];
 
   return (
-    <section className="hero-sec" id="hero" ref={heroRef} style={{ background: '#050508' }}>
-      {/* Background blobs for premium glassmorphism vibe */}
-      <div className="glow-blob blob-purple" style={{ opacity: 0.25 }}></div>
-      <div className="glow-blob blob-cyan" style={{ opacity: 0.25 }}></div>
+    <section className="hero-sec" id="hero" ref={heroRef}>
 
-      <div className="hero-bg-wrapper" ref={bgRef}>
-        <video 
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="hero-bg"
-          poster="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600"
-        >
-          <source src="https://cdn.shopify.com/videos/c/o/v/3bf4a509620e4e53aa454c856a432f1e.mp4" type="video/mp4" />
-        </video>
+      {/* === CINEMATIC BACKGROUND === */}
+      <div className="hero-slides-container">
+        {HERO_SLIDES.map((slide, i) => (
+          <div
+            key={i}
+            className={`hero-slide ${i === slideIndex ? 'active' : ''} ${i === prevSlideIndex ? 'prev' : ''}`}
+          >
+            <img
+              src={slide.image}
+              alt={slide.label}
+              className="hero-slide-img"
+              loading={i === 0 ? 'eager' : 'lazy'}
+            />
+          </div>
+        ))}
       </div>
-      <div className="hero-overlay" style={{ background: 'linear-gradient(180deg, rgba(5,5,8,0.5) 0%, rgba(5,5,8,0.3) 50%, rgba(5,5,8,1) 100%)' }}></div>
-      
+
+      {/* === LAYERED OVERLAYS === */}
+      {/* Base dark vignette */}
+      <div className="hero-overlay-base" />
+      {/* Gradient sweep from bottom */}
+      <div className="hero-overlay-gradient" />
+      {/* Dynamic color tint from current slide */}
+      <div
+        className="hero-overlay-tint"
+        style={{ background: `radial-gradient(ellipse at 70% 50%, ${current.accent} 0%, transparent 65%)` }}
+      />
+      {/* Diagonal scan-line texture */}
+      <div className="hero-scanlines" />
+
+      {/* === FLOATING ORBS / PARTICLES === */}
+      <div className="hero-orb hero-orb-1" />
+      <div className="hero-orb hero-orb-2" />
+      <div className="hero-orb hero-orb-3" />
+
+      {/* === SLIDE DOTS INDICATOR === */}
+      <div className="hero-slide-dots">
+        {HERO_SLIDES.map((_, i) => (
+          <button
+            key={i}
+            className={`hero-dot ${i === slideIndex ? 'active' : ''}`}
+            onClick={() => { setPrevSlideIndex(slideIndex); setSlideIndex(i); }}
+            aria-label={`Slide ${i + 1}`}
+          />
+        ))}
+      </div>
+
+      {/* === SLIDE LABEL === */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={slideIndex}
+          className="hero-slide-label"
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -30 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          <span className="hero-slide-label-text">{current.label}</span>
+          <div className="hero-slide-label-line" />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* === MAIN CONTENT === */}
       <div className="hero-content">
         {/* Animated Promo Banner */}
-        <div style={{ overflow: 'hidden', height: '24px', marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
-          <motion.div
-            key={promoIndex}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -20, opacity: 0 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-            className="mono"
-            style={{ 
-              fontSize: '0.75rem', 
-              color: 'var(--accent-raw)', 
-              fontWeight: 700, 
-              letterSpacing: '1px',
-              border: '1px solid rgba(6, 182, 212, 0.2)',
-              padding: '4px 16px',
-              borderRadius: '20px',
-              backgroundColor: 'rgba(6, 182, 212, 0.05)',
-              backdropFilter: 'blur(4px)'
-            }}
-          >
-            {PROMO_TEXTS[promoIndex]}
-          </motion.div>
+        <div className="hero-promo-wrapper">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={promoIndex}
+              initial={{ y: 16, opacity: 0 }}
+              animate={startAnimation ? { y: 0, opacity: 1 } : { y: 16, opacity: 0 }}
+              exit={{ y: -16, opacity: 0 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              className="mono hero-promo-pill"
+            >
+              {PROMO_TEXTS[promoIndex]}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        <motion.span 
+        <motion.span
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1 }}
+          animate={startAnimation ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
           className="mono hero-pretitle"
-          style={{ color: 'var(--text-grey)' }}
         >
           TRENDCART // CURATED QUALITY
         </motion.span>
-        
-        <motion.h1 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.2 }}
+
+        <motion.h1
+          initial={{ opacity: 0, y: 40 }}
+          animate={startAnimation ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+          transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="hero-title"
-          style={{ letterSpacing: '-1px' }}
         >
-          SHOP SMART<br />LIVE BETTER
+          <span className="hero-title-line">SHOP</span>
+          <span className="hero-title-line hero-title-gradient">SMART.</span>
+          <span className="hero-title-line hero-title-outline">LIVE BETTER.</span>
         </motion.h1>
-        
-        <motion.p 
+
+        <motion.p
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.4 }}
+          animate={startAnimation ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
           className="hero-description"
         >
           Explore TrendCart's selection of premium apparel, high-fidelity audio equipment, and elegant accessories. Crafted for modern lifestyles and daily utility.
         </motion.p>
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.6 }}
+          animate={startAnimation ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
           className="hero-actions"
+          style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}
         >
-          <button 
-            className="btn-primary" 
+          <button
+            className="btn-primary hero-btn-main"
             onClick={onExploreClick}
-            style={{ 
-              background: 'var(--accent-gradient)', 
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '4px',
-              boxShadow: 'var(--glow-shadow)'
-            }}
           >
-            Explore Catalog <ArrowDown size={16} />
+            <Sparkles size={16} />
+            Explore Catalog
           </button>
+          <button
+            className="hero-btn-outline"
+            onClick={onExploreClick}
+          >
+            View Lookbook <ArrowDown size={14} />
+          </button>
+        </motion.div>
+
+        {/* Stats strip */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={startAnimation ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 1, delay: 1.1 }}
+          className="hero-stats"
+        >
+          {[
+            { val: '10K+', label: 'Products' },
+            { val: '4.9★', label: 'Rating' },
+            { val: '50K+', label: 'Customers' },
+            { val: '24h', label: 'Support' },
+          ].map((s) => (
+            <div key={s.label} className="hero-stat-item">
+              <span className="hero-stat-val">{s.val}</span>
+              <span className="hero-stat-label">{s.label}</span>
+            </div>
+          ))}
         </motion.div>
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 2 }}
-        className="scroll-indicator" 
-        onClick={onExploreClick} 
+        animate={startAnimation ? { opacity: 1 } : { opacity: 0 }}
+        transition={{ duration: 1, delay: 1.3 }}
+        className="scroll-indicator"
+        onClick={onExploreClick}
         style={{ cursor: 'pointer' }}
       >
         <span className="mono scroll-indicator-text" style={{ letterSpacing: '2px', color: 'var(--text-grey)' }}>SCROLL TO DISCOVER</span>
-        <div className="scroll-indicator-line" style={{ background: 'linear-gradient(180deg, var(--accent) 0%, transparent 100%)' }}></div>
+        <div className="scroll-indicator-line" style={{ background: 'linear-gradient(180deg, var(--accent) 0%, transparent 100%)' }} />
       </motion.div>
     </section>
   );

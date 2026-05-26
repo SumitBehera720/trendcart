@@ -2,10 +2,16 @@ import { useState, useEffect } from 'react';
 import { ShoppingBag, Menu, X, Phone, User } from 'lucide-react';
 import Lenis from 'lenis';
 import { auth, profile, orders as ordersApi } from './services/api';
+import { products as localProducts } from './data/products';
 import Preloader from './components/Preloader';
 import Hero from './components/Hero';
+import FeaturedCategories from './components/FeaturedCategories';
 import BrandStory from './components/BrandStory';
+import WhyChooseUs from './components/WhyChooseUs';
 import Catalog from './components/Catalog';
+import Reviews from './components/Reviews';
+import InstagramGallery from './components/InstagramGallery';
+import Newsletter from './components/Newsletter';
 import ProductDetailModal from './components/ProductDetailModal';
 import CartDrawer from './components/CartDrawer';
 import RazorpayModal from './components/RazorpayModal';
@@ -18,6 +24,33 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
+
+  // Wishlist State
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('trendcart_wishlist') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+
+  // Coupon State
+  const [appliedCoupon, setAppliedCoupon] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('trendcart_wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
+
+  const handleToggleWishlist = (product) => {
+    setWishlist(prev => {
+      const exists = prev.find(item => item.id === product.id);
+      if (exists) {
+        return prev.filter(item => item.id !== product.id);
+      } else {
+        return [...prev, product];
+      }
+    });
+  };
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Cart State
@@ -434,13 +467,23 @@ export default function App() {
 
           {/* Main sections */}
           <main>
-            <Hero onExploreClick={() => scrollToSection('catalog')} />
+            <Hero onExploreClick={() => scrollToSection('catalog')} startAnimation={!loading} />
+            <FeaturedCategories onCategorySelect={(cat) => {
+              setActiveCategory(cat);
+              scrollToSection('catalog');
+            }} />
             <BrandStory />
+            <WhyChooseUs />
             <Catalog 
               onProductClick={handleQuickView} 
               activeTab={activeCategory}
               setActiveTab={setActiveCategory}
+              wishlist={wishlist}
+              onToggleWishlist={handleToggleWishlist}
             />
+            <Reviews />
+            <InstagramGallery />
+            <Newsletter />
           </main>
 
           {/* Footer */}
@@ -460,6 +503,13 @@ export default function App() {
             isOpen={isProductModalOpen}
             onClose={() => setIsProductModalOpen(false)}
             onAddToCart={handleAddToCart}
+            relatedProducts={
+              selectedProduct 
+                ? (JSON.parse(localStorage.getItem('trendcart_products')) || localProducts)
+                    .filter(p => p.category === selectedProduct.category && p.id !== selectedProduct.id)
+                : []
+            }
+            onProductClick={handleQuickView}
           />
 
           <CartDrawer 
@@ -469,6 +519,8 @@ export default function App() {
             onUpdateQty={handleUpdateQty}
             onRemoveItem={handleRemoveItem}
             onCheckout={handleCheckoutTrigger}
+            appliedCoupon={appliedCoupon}
+            onApplyCoupon={setAppliedCoupon}
           />
 
           <OrderTrackingModal 
@@ -502,6 +554,9 @@ export default function App() {
               setIsProfileOpen(false);
               setIsAdminOpen(true);
             }}
+            wishlist={wishlist}
+            onToggleWishlist={handleToggleWishlist}
+            onAddToCart={handleAddToCart}
           />
 
           {isRazorpayOpen && (
@@ -511,8 +566,9 @@ export default function App() {
               totalAmount={
                 (() => {
                   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                  const discount = appliedCoupon === 'TREND10' ? Math.round(subtotal * 0.1) : 0;
                   const shipping = 0;
-                  return subtotal + shipping;
+                  return subtotal - discount + shipping;
                 })()
               }
               onSuccess={handlePaymentSuccess}

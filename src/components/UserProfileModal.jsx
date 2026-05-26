@@ -13,9 +13,13 @@ export default function UserProfileModal({
   orders = [],
   onTrackOrder,
   onSeedMockOrders,
-  onOpenAdmin
+  onOpenAdmin,
+  wishlist = [],
+  onToggleWishlist,
+  onAddToCart
 }) {
   const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register' | 'forgot' | 'reset'
+  const [profileSubTab, setProfileSubTab] = useState('info'); // 'info' | 'wishlist' | 'orders'
   
   // Auth Form Fields
   const [email, setEmail] = useState('');
@@ -769,154 +773,268 @@ export default function UserProfileModal({
                       )}
                     </div>
 
-                    {/* Detail view & Edit Form */}
-                    <div style={{ marginBottom: '32px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', marginBottom: '16px' }}>
-                        <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>PERSONAL INFORMATION</div>
-                        {!isEditing && (
-                          <button onClick={startEditing} style={{ color: 'var(--accent-raw)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Edit size={12} /> Edit Details
-                          </button>
+                    {/* Sub Tab Navigation */}
+                    <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '24px' }}>
+                      <button 
+                        type="button"
+                        className={`auth-tab ${profileSubTab === 'info' ? 'active' : ''}`}
+                        onClick={() => setProfileSubTab('info')}
+                        style={{ paddingBottom: '12px', fontSize: '0.75rem' }}
+                      >
+                        MY INFO
+                      </button>
+                      <button 
+                        type="button"
+                        className={`auth-tab ${profileSubTab === 'wishlist' ? 'active' : ''}`}
+                        onClick={() => setProfileSubTab('wishlist')}
+                        style={{ paddingBottom: '12px', fontSize: '0.75rem' }}
+                      >
+                        WISHLIST ({wishlist.length})
+                      </button>
+                      <button 
+                        type="button"
+                        className={`auth-tab ${profileSubTab === 'orders' ? 'active' : ''}`}
+                        onClick={() => setProfileSubTab('orders')}
+                        style={{ paddingBottom: '12px', fontSize: '0.75rem' }}
+                      >
+                        ORDERS ({userOrders.length})
+                      </button>
+                    </div>
+
+                    {/* Detail view & Edit Form (Info Tab) */}
+                    {profileSubTab === 'info' && (
+                      <div style={{ marginBottom: '32px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', marginBottom: '16px' }}>
+                          <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>PERSONAL INFORMATION</div>
+                          {!isEditing && (
+                            <button onClick={startEditing} style={{ color: 'var(--accent-raw)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <Edit size={12} /> Edit Details
+                            </button>
+                          )}
+                        </div>
+
+                        {editSuccess && (
+                          <div style={{ color: '#22c55e', fontSize: '0.8rem', padding: '8px 12px', border: '1px solid rgba(34, 197, 94, 0.2)', backgroundColor: 'rgba(34, 197, 94, 0.05)', borderRadius: '4px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Check size={14} /> Profile details successfully updated.
+                          </div>
+                        )}
+
+                        {editError && (
+                          <div style={{ color: 'var(--accent-raw)', fontSize: '0.8rem', padding: '8px 12px', border: '1px solid rgba(249, 115, 22, 0.2)', backgroundColor: 'rgba(249, 115, 22, 0.05)', borderRadius: '4px', marginBottom: '16px' }}>
+                            {editError}
+                          </div>
+                        )}
+
+                        {isEditing ? (
+                          <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                              <div className="rzp-input-group">
+                                <label className="rzp-label">Name</label>
+                                <input 
+                                  type="text" 
+                                  className="rzp-input" 
+                                  value={editName}
+                                  onChange={e => setEditName(e.target.value)}
+                                  required
+                                />
+                              </div>
+                              <div className="rzp-input-group">
+                                <label className="rzp-label">Mobile Phone</label>
+                                <input 
+                                  type="tel" 
+                                  className="rzp-input" 
+                                  pattern="[0-9]{10}"
+                                  maxLength="10"
+                                  value={editPhone}
+                                  onChange={e => setEditPhone(e.target.value.replace(/\D/g, ''))}
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '16px' }}>
+                              <div className="rzp-input-group">
+                                <label className="rzp-label">Complete Shipping Address</label>
+                                <input 
+                                  type="text" 
+                                  className="rzp-input" 
+                                  value={editAddress}
+                                  onChange={e => setEditAddress(e.target.value)}
+                                  required
+                                />
+                              </div>
+                              <div className="rzp-input-group">
+                                <label className="rzp-label">Pincode</label>
+                                <input 
+                                  type="text" 
+                                  className="rzp-input" 
+                                  maxLength="6"
+                                  value={editPincode}
+                                  onChange={e => setEditPincode(e.target.value.replace(/\D/g, ''))}
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                              <button type="button" onClick={() => setIsEditing(false)} className="btn-secondary" style={{ padding: '8px 20px', fontSize: '0.7rem' }}>
+                                Cancel
+                              </button>
+                              <button type="submit" className="btn-primary" style={{ padding: '8px 24px', fontSize: '0.7rem' }}>
+                                <Save size={12} /> Save Changes
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', fontSize: '0.85rem' }}>
+                              <span style={{ color: 'var(--text-muted)' }}>Email:</span>
+                              <span style={{ color: 'var(--text-light)' }}>{currentUser.email}</span>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', fontSize: '0.85rem' }}>
+                              <span style={{ color: 'var(--text-muted)' }}>Mobile Phone:</span>
+                              <span style={{ color: 'var(--text-light)' }}>+91 {currentUser.phone}</span>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', fontSize: '0.85rem' }}>
+                              <span style={{ color: 'var(--text-muted)' }}>Address:</span>
+                              <span style={{ color: 'var(--text-light)', lineHeight: '1.4' }}>
+                                {currentUser.address}, Pincode - {currentUser.pincode}
+                              </span>
+                            </div>
+                          </div>
                         )}
                       </div>
+                    )}
 
-                      {editSuccess && (
-                        <div style={{ color: '#22c55e', fontSize: '0.8rem', padding: '8px 12px', border: '1px solid rgba(34, 197, 94, 0.2)', backgroundColor: 'rgba(34, 197, 94, 0.05)', borderRadius: '4px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={14} /> Profile details successfully updated.
+                    {/* Wishlist Tab */}
+                    {profileSubTab === 'wishlist' && (
+                      <div style={{ marginBottom: '32px' }}>
+                        <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', marginBottom: '16px' }}>
+                          MY WISHLIST ({wishlist.length})
                         </div>
-                      )}
 
-                      {editError && (
-                        <div style={{ color: 'var(--accent-raw)', fontSize: '0.8rem', padding: '8px 12px', border: '1px solid rgba(249, 115, 22, 0.2)', backgroundColor: 'rgba(249, 115, 22, 0.05)', borderRadius: '4px', marginBottom: '16px' }}>
-                          {editError}
-                        </div>
-                      )}
-
-                      {isEditing ? (
-                        <form onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                            <div className="rzp-input-group">
-                              <label className="rzp-label">Name</label>
-                              <input 
-                                type="text" 
-                                className="rzp-input" 
-                                value={editName}
-                                onChange={e => setEditName(e.target.value)}
-                                required
-                              />
-                            </div>
-                            <div className="rzp-input-group">
-                              <label className="rzp-label">Mobile Phone</label>
-                              <input 
-                                type="tel" 
-                                className="rzp-input" 
-                                pattern="[0-9]{10}"
-                                maxLength="10"
-                                value={editPhone}
-                                onChange={e => setEditPhone(e.target.value.replace(/\D/g, ''))}
-                                required
-                              />
-                            </div>
+                        {wishlist.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                            <div>Your wishlist is empty. Start adding some favorites!</div>
                           </div>
-
-                          <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '16px' }}>
-                            <div className="rzp-input-group">
-                              <label className="rzp-label">Complete Shipping Address</label>
-                              <input 
-                                type="text" 
-                                className="rzp-input" 
-                                value={editAddress}
-                                onChange={e => setEditAddress(e.target.value)}
-                                required
-                              />
-                            </div>
-                            <div className="rzp-input-group">
-                              <label className="rzp-label">Pincode</label>
-                              <input 
-                                type="text" 
-                                className="rzp-input" 
-                                maxLength="6"
-                                value={editPincode}
-                                onChange={e => setEditPincode(e.target.value.replace(/\D/g, ''))}
-                                required
-                              />
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '10px' }}>
-                            <button type="button" onClick={() => setIsEditing(false)} className="btn-secondary" style={{ padding: '8px 20px', fontSize: '0.7rem' }}>
-                              Cancel
-                            </button>
-                            <button type="submit" className="btn-primary" style={{ padding: '8px 24px', fontSize: '0.7rem' }}>
-                              <Save size={12} /> Save Changes
-                            </button>
-                          </div>
-                        </form>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', fontSize: '0.85rem' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>Email:</span>
-                            <span style={{ color: 'var(--text-light)' }}>{currentUser.email}</span>
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', fontSize: '0.85rem' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>Mobile Phone:</span>
-                            <span style={{ color: 'var(--text-light)' }}>+91 {currentUser.phone}</span>
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', fontSize: '0.85rem' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>Address:</span>
-                            <span style={{ color: 'var(--text-light)', lineHeight: '1.4' }}>
-                              {currentUser.address}, Pincode - {currentUser.pincode}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Order History */}
-                    <div>
-                      <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', marginBottom: '16px' }}>
-                        ORDER HISTORY ({userOrders.length})
-                      </div>
-
-                      {userOrders.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                          <History size={24} style={{ marginBottom: '10px', opacity: 0.3 }} />
-                          <div>No orders placed yet. Start your rebellion today!</div>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          {userOrders.map((order) => {
-                            const itemCount = order.items ? order.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
-                            return (
+                        ) : (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
+                            {wishlist.map((item) => (
                               <div 
-                                key={order.id || order.orderId}
-                                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '4px' }}
+                                key={item.id} 
+                                style={{
+                                  backgroundColor: 'rgba(255,255,255,0.01)',
+                                  border: '1px solid rgba(255,255,255,0.03)',
+                                  borderRadius: '6px',
+                                  overflow: 'hidden',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'space-between',
+                                  transition: 'var(--transition-quick)'
+                                }}
                               >
-                                <div>
-                                  <div className="mono" style={{ fontSize: '0.8rem', color: 'var(--accent-raw)', fontWeight: 700 }}>
-                                    {order.id || order.orderId}
-                                  </div>
-                                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                                    Placed: {order.created_at ? new Date(order.created_at).toLocaleDateString() : (order.date?.split(' at ')[0])} | {itemCount} {itemCount === 1 ? 'item' : 'items'}
-                                  </div>
-                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600, marginTop: '4px' }}>
-                                    Paid: ₹{((order.total || 0) || (order.subtotal + order.shipping)).toLocaleString('en-IN')}
-                                  </div>
+                                <div style={{ position: 'relative', aspectRatio: '3/4' }}>
+                                  <img 
+                                    src={item.image} 
+                                    alt={item.name} 
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                  />
+                                  <button 
+                                    onClick={() => onToggleWishlist(item)}
+                                    style={{
+                                      position: 'absolute',
+                                      top: '8px',
+                                      right: '8px',
+                                      backgroundColor: 'rgba(5,5,8,0.7)',
+                                      border: 'none',
+                                      borderRadius: '50%',
+                                      width: '24px',
+                                      height: '24px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      color: '#f43f5e',
+                                      cursor: 'pointer'
+                                    }}
+                                    title="Remove"
+                                  >
+                                    <X size={10} />
+                                  </button>
                                 </div>
                                 
-                                <button 
-                                  onClick={() => onTrackOrder(order)}
-                                  className="btn-secondary" 
-                                  style={{ padding: '6px 14px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-                                >
-                                  <Truck size={12} /> Track Order
-                                </button>
+                                <div style={{ padding: '12px' }}>
+                                  <h4 style={{ fontSize: '0.8rem', color: 'var(--text-light)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: '0 0 4px' }}>
+                                    {item.name}
+                                  </h4>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--accent-raw)', fontWeight: 600, marginBottom: '10px' }}>
+                                    ₹{item.price.toLocaleString('en-IN')}
+                                  </div>
+                                  <button 
+                                    onClick={() => {
+                                      const defaultSize = item.sizes && item.sizes.length > 0 ? item.sizes[0] : 'One Size';
+                                      onAddToCart(item, defaultSize);
+                                      onClose();
+                                    }}
+                                    className="btn-primary" 
+                                    style={{ width: '100%', padding: '6px 0', fontSize: '0.65rem', justifyContent: 'center', height: 'auto' }}
+                                  >
+                                    Move to Cart
+                                  </button>
+                                </div>
                               </div>
-                            );
-                          })}
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Order History Tab */}
+                    {profileSubTab === 'orders' && (
+                      <div>
+                        <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px', marginBottom: '16px' }}>
+                          ORDER HISTORY ({userOrders.length})
                         </div>
-                      )}
-                    </div>
+
+                        {userOrders.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                            <History size={24} style={{ marginBottom: '10px', opacity: 0.3 }} />
+                            <div>No orders placed yet. Start your shopping today!</div>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {userOrders.map((order) => {
+                              const itemCount = order.items ? order.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
+                              return (
+                                <div 
+                                  key={order.id || order.orderId}
+                                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '4px' }}
+                                >
+                                  <div>
+                                    <div className="mono" style={{ fontSize: '0.8rem', color: 'var(--accent-raw)', fontWeight: 700 }}>
+                                      {order.id || order.orderId}
+                                    </div>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                      Placed: {order.created_at ? new Date(order.created_at).toLocaleDateString() : (order.date?.split(' at ')[0])} | {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 600, marginTop: '4px' }}>
+                                      Paid: ₹{((order.total || 0) || (order.subtotal + order.shipping)).toLocaleString('en-IN')}
+                                    </div>
+                                  </div>
+                                  
+                                  <button 
+                                    onClick={() => onTrackOrder(order)}
+                                    className="btn-secondary" 
+                                    style={{ padding: '6px 14px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                  >
+                                    <Truck size={12} /> Track Order
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                   </motion.div>
                 )}

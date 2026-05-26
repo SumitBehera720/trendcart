@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, ChevronDown, ChevronUp, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ProductDetailModal({ product, isOpen, onClose, onAddToCart }) {
+export default function ProductDetailModal({ product, isOpen, onClose, onAddToCart, relatedProducts = [], onProductClick }) {
   const [selectedSize, setSelectedSize] = useState(() => {
     return product && product.sizes && product.sizes.length === 1 ? product.sizes[0] : '';
   });
@@ -12,6 +12,13 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToCa
   const [activeAccordion, setActiveAccordion] = useState('specs');
   const [errorMsg, setErrorMsg] = useState('');
   const [activeImgIndex, setActiveImgIndex] = useState(0);
+
+  const getDeliveryEstimate = () => {
+    const today = new Date();
+    const estDate = new Date(today);
+    estDate.setDate(today.getDate() + 4);
+    return estDate.toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' });
+  };
 
   const productImages = product?.images && product.images.length > 0 
     ? product.images 
@@ -131,6 +138,25 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToCa
               <p className="modal-desc">
                 {product.description}
               </p>
+
+              {/* Delivery Estimate */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                color: 'var(--text-grey)',
+                fontSize: '0.8rem',
+                margin: '15px 0 20px',
+                padding: '8px 12px',
+                backgroundColor: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: '4px'
+              }}>
+                <span>🚚</span>
+                <span>
+                  Estimated Delivery: <strong style={{ color: 'var(--accent-raw)' }}>{getDeliveryEstimate()}</strong>
+                </span>
+              </div>
 
               {/* Limited Stock Alarm */}
               {product.stock === "Limited" && (
@@ -286,6 +312,52 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToCa
                   </AnimatePresence>
                 </div>
               </div>
+
+              {/* Related Products */}
+              {relatedProducts && relatedProducts.length > 0 && (
+                <div style={{ marginTop: '40px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
+                  <h4 className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginBottom: '16px', fontWeight: 700 }}>
+                    YOU MAY ALSO LIKE
+                  </h4>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    {relatedProducts.slice(0, 2).map(p => (
+                      <div 
+                        key={p.id} 
+                        onClick={() => {
+                          onProductClick(p);
+                        }}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                          cursor: 'pointer',
+                          backgroundColor: 'rgba(255,255,255,0.01)',
+                          border: '1px solid rgba(255,255,255,0.03)',
+                          borderRadius: '4px',
+                          padding: '12px',
+                          transition: 'var(--transition-quick)'
+                        }}
+                        className="related-product-card"
+                      >
+                        <img 
+                          src={p.image} 
+                          alt={p.name} 
+                          style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '2px' }} 
+                        />
+                        <div style={{ minWidth: 0 }}>
+                          <h5 style={{ fontSize: '0.8rem', color: 'var(--text-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+                            {p.name}
+                          </h5>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--accent-raw)', fontWeight: 600 }}>
+                            ₹{p.price.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </>

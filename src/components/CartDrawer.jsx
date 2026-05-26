@@ -1,4 +1,5 @@
-import { X, Trash2, Plus, Minus, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+import { X, Trash2, Plus, Minus, ShieldCheck, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FREE_SHIPPING_THRESHOLD = 5000;
@@ -9,16 +10,37 @@ export default function CartDrawer({
   cartItems, 
   onUpdateQty, 
   onRemoveItem, 
-  onCheckout 
+  onCheckout,
+  appliedCoupon,
+  onApplyCoupon
 }) {
+  const [couponText, setCouponText] = useState('');
+  const [couponError, setCouponError] = useState('');
+
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const shippingPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
   
   // Tax calculations (GST 12% is included in product price)
-  const gstIncluded = Math.round(subtotal - (subtotal / 1.12));
+  const discount = appliedCoupon === 'TREND10' ? Math.round(subtotal * 0.1) : 0;
+  const gstIncluded = Math.round((subtotal - discount) - ((subtotal - discount) / 1.12));
   const shippingCost = 0;
-  const total = subtotal + shippingCost;
+  const total = subtotal - discount + shippingCost;
+
+  const handleApplyCoupon = (e) => {
+    e.preventDefault();
+    setCouponError('');
+    if (couponText.trim().toUpperCase() === 'TREND10') {
+      onApplyCoupon('TREND10');
+      setCouponText('');
+    } else {
+      setCouponError('Invalid coupon code. Try TREND10');
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    onApplyCoupon('');
+  };
 
   return (
     <AnimatePresence>
@@ -103,6 +125,12 @@ export default function CartDrawer({
                           <div>
                             <h3 className="cart-item-name">{item.name}</h3>
                             <div className="cart-item-size">SIZE: {item.selectedSize || 'FREE SIZE'}</div>
+                            {item.stock === "Limited" && (
+                              <div style={{ color: '#f43f5e', fontSize: '0.65rem', fontFamily: 'var(--font-mono)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ display: 'inline-block', width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#f43f5e' }}></span>
+                                🔥 ONLY {item.stock_count || 3} LEFT!
+                              </div>
+                            )}
                           </div>
                           <span className="cart-item-price">
                             ₹{(item.price * item.quantity).toLocaleString('en-IN')}
@@ -146,10 +174,66 @@ export default function CartDrawer({
                 layout
                 className="cart-footer"
               >
+                {/* Coupon Form */}
+                <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '16px', marginBottom: '16px' }}>
+                  {appliedCoupon ? (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', backgroundColor: 'rgba(6, 182, 212, 0.05)', border: '1px dashed rgba(6, 182, 212, 0.3)', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--accent-raw)', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Tag size={12} /> {appliedCoupon} APPLIED (10% OFF)
+                      </span>
+                      <button 
+                        onClick={handleRemoveCoupon} 
+                        style={{ fontSize: '0.7rem', color: '#f43f5e', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleApplyCoupon} style={{ display: 'flex', gap: '8px' }}>
+                      <input 
+                        type="text" 
+                        value={couponText}
+                        onChange={e => setCouponText(e.target.value)}
+                        placeholder="PROMO CODE (e.g. TREND10)"
+                        style={{
+                          flex: 1,
+                          height: '36px',
+                          backgroundColor: 'var(--bg-input)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: '4px',
+                          padding: '0 12px',
+                          color: 'var(--text-light)',
+                          fontSize: '0.75rem',
+                          fontFamily: 'var(--font-mono)'
+                        }}
+                      />
+                      <button 
+                        type="submit" 
+                        className="btn-primary" 
+                        style={{ height: '36px', padding: '0 16px', fontSize: '0.7rem', fontFamily: 'var(--font-mono)' }}
+                      >
+                        APPLY
+                      </button>
+                    </form>
+                  )}
+                  {couponError && (
+                    <p style={{ color: '#ef4444', fontSize: '0.7rem', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>
+                      {couponError}
+                    </p>
+                  )}
+                </div>
+
                 <div className="cart-summary-row">
                   <span className="cart-summary-label">Subtotal</span>
                   <span className="cart-summary-val">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
+                
+                {discount > 0 && (
+                  <div className="cart-summary-row" style={{ color: 'var(--accent-raw)' }}>
+                    <span className="cart-summary-label">Coupon Discount (10%)</span>
+                    <span className="cart-summary-val">-₹{discount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 
                 <div className="cart-summary-row">
                   <span className="cart-summary-label">Shipping</span>
